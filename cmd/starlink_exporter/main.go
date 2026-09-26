@@ -22,6 +22,7 @@ const (
 
 func main() {
 	port := flag.String("port", "9817", "listening port to expose metrics on")
+	listenAddr := flag.String("listen-address", "", "host:port to expose metrics on (e.g. 127.0.0.1:9817); overrides -port")
 	address := flag.String("address", exporter.DishAddress, "IP address and port to reach dish")
 	iface := flag.String("interface", "", "network interface to reach the dish through (SO_BINDTODEVICE, Linux only); needed when the Starlink link does not hold the default route")
 	flag.Parse()
@@ -92,5 +93,9 @@ func main() {
 	http.Handle(metricsPath, promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
 	http.Handle(infrequentMetricsPath, promhttp.HandlerFor(r1, promhttp.HandlerOpts{}))
 
-	log.Fatal(http.ListenAndServe(":"+*port, nil))
+	addr := ":" + *port
+	if *listenAddr != "" {
+		addr = *listenAddr
+	}
+	log.Fatal(http.ListenAndServe(addr, nil))
 }
