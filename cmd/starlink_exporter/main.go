@@ -23,10 +23,14 @@ const (
 func main() {
 	port := flag.String("port", "9817", "listening port to expose metrics on")
 	address := flag.String("address", exporter.DishAddress, "IP address and port to reach dish")
+	iface := flag.String("interface", "", "network interface to reach the dish through (SO_BINDTODEVICE, Linux only); needed when the Starlink link does not hold the default route")
 	flag.Parse()
 
 	if os.Getenv("STARLINK_GRPC_ADDR_PORT") != "" {
 		*address = os.Getenv("STARLINK_GRPC_ADDR_PORT")
+	}
+	if os.Getenv("STARLINK_GRPC_IFACE") != "" {
+		*iface = os.Getenv("STARLINK_GRPC_IFACE")
 	}
 
 	var exporterClient *exporter.Exporter
@@ -35,7 +39,7 @@ func main() {
 	retryDelay := 1
 
 	for {
-		exporterClient, err = exporter.New(*address)
+		exporterClient, err = exporter.New(*address, *iface)
 		if err == nil {
 			break
 		}

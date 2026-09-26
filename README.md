@@ -36,6 +36,8 @@ $ ./starlink_exporter -h
 Usage of ./starlink_exporter:
   -address string
         IP address and port to reach dish (default "192.168.100.1:9200")
+  -interface string
+        network interface to reach the dish through (SO_BINDTODEVICE, Linux only); needed when the Starlink link does not hold the default route
   -port string
         listening port to expose metrics on (default "9817")
 ```
