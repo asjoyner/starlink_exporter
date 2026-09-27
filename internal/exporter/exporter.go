@@ -8,6 +8,7 @@ import (
 	"image"
 	"image/color"
 	"image/png"
+	"net"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -28,9 +29,17 @@ type Exporter struct {
 	CountryCode string
 }
 
-// New returns an initialized Exporter.
-func New(address string) (*Exporter, error) {
-	conn, err := grpc.NewClient(address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+// New returns an initialized Exporter. If iface is non-empty, connections
+// to the dish are bound to that network interface.
+func New(address, iface string) (*Exporter, error) {
+	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+	if iface != "" {
+		d := net.Dialer{Control: bindToDevice(iface)}
+		opts = append(opts, grpc.WithContextDialer(func(ctx context.Context, addr string) (net.Conn, error) {
+			return d.DialContext(ctx, "tcp", addr)
+		}))
+	}
+	conn, err := grpc.NewClient(address, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("connect to Starlink dish gRPC interface failed: %s", err.Error())
 	}
